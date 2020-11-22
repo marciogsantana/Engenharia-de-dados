@@ -39,6 +39,7 @@ myzip.extractall('./enade2019')
 # verificando os dados baixados
 # parametros sep para separaracao de dados e decimal para casas decimais
 enade = pd.read_csv("./enade2019/microdados_enade_2019/2019/3.DADOS/microdados_enade_2019.txt",sep = ";", decimal = ",")
+# enem = pd.read_csv("./enem2019/DADOS/MICRODADOS_ENEM_2019.csv", sep = ";", decimal=".", encoding='latin1')  para carregar arquivo csv quando da erro udf-8
 #informaçoes do frame
 enade.info()
 # dicionario para visualizar colunas
