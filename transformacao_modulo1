@@ -1,0 +1,192 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Nov 22 11:03:35 2020
+
+@author: Marcio Gomes de Sant
+"""
+
+# transformacao de dados parte 1
+
+# importacao de bibiotecas
+
+# import pandas as pd
+# import numpy as np
+# import os
+
+import pandas as pd
+import numpy as np
+import os
+
+# criando objeto do tipo frame carregamendo o arquivo
+
+enade = pd.read_csv("./enade2019/microdados_enade_2019/2019/3.DADOS/microdados_enade_2019.txt", sep = ";", decimal =",")
+
+#lendo as 5 primeras linhas
+
+enade.head()
+
+# verificando shema da tabela (tipo)
+
+dict(enade.dtypes)
+
+# escolhendo variaveis do dataframe de interesse para analisa
+
+# CO_IES
+# CO_CATEGAD
+# CO_GRUPO
+# CO_MODALIDADE
+# CO_UF_CURSO
+# CO_REGIAO_CURSO
+# NU_IDADE
+# TP_SEXO
+# NT_GER
+# NT_FG
+# NT_CE
+
+# Mais algumas informaçoes do questionario do estudante
+
+# 01: Estado civil
+# 02: Cor ou raça
+# 04: Escolaridade do pai
+# 05: Escolaridade da mae
+# 08: Renda familiar
+# 10: Situaçao de trabalho
+# 11: situaçao de bolsa
+# 14: intercambio
+# 15: cotas
+# 23: Horas de estudo / semana
+# 25: Motivo de escolha do curso
+# 26: Motivo da escolha da IES
+
+# verificando coluna nota geral NT_GER
+
+enade.NT_GER.describe()  # objeto.nome do coluna. metodo (describe para descrever as informaçoes da coluna)
+
+# verificando casos nulos
+
+enade.NT_GER.isnull().sum() # objeto.nome da coluna. metodo (isnull verificar nulos e sum soma dos nulos)
+
+# verificando quantidade de linha e colunas
+
+enade.shape
+
+# quantidade relativa de nulos (percentual)
+
+enade.NT_GER.isnull().sum() / enade.shape[0]  # shape[0] pega total de linhas
+
+# usando filtro de notas por regiao
+#comando loc é para usar condiçoes 
+#acessando informaçeos estatiscicas da regiao 
+enade.loc[enade.CO_REGIAO_CURSO == 2].NT_GER.describe()
+
+# verificando numero de provas igual a 0
+enade.loc[enade.NT_GER == 0].NT_GER.describe()
+# verificando numero de provas maior que 0
+enade.loc[enade.NT_GER > 0].NT_GER.describe()
+
+# fazendo filtro por idade entre 20 e 50 anos
+
+enade.loc[(enade.NU_IDADE >= 20) & (enade.NU_IDADE <= 50) & (enade.NT_GER >  0)].NT_GER.describe()
+
+# visualizando tammanho do frame
+
+enade.loc[(enade.NU_IDADE >= 20) & (enade.NU_IDADE <= 50) & (enade.NT_GER >  0)].shape
+
+# tabela cruzada 
+# quantos homems e mulheres 
+enade.TP_SEXO.value_counts()  # contar por valor
+
+# numeros relativos
+
+enade.TP_SEXO.value_counts() / enade.shape[0]
+
+# comparando as tres notas usando uma media simples
+
+enade[["NT_GER", "NT_FG", "NT_CE"]].describe()  # verificando mais de um campo usamos doi conchetes para gerar um novo dataset apenas com as novas informaçoes
+
+# comparando as tres notas por regiao
+
+enade.groupby("CO_REGIAO_CURSO").agg({"NT_GER": "mean", "NT_FG": "mean", "NT_CE": "mean"})  # groupby para juntar categoria e funçao agg para agregar
+
+### transformaçoes 
+
+# CO_IES
+# CO_CATEGAD
+# CO_GRUPO
+# CO_MODALIDADE
+# CO_UF_CURSO
+# CO_REGIAO_CURSO
+# NU_IDADE
+# TP_SEXO
+# NT_GER
+# NT_FG
+# NT_CE
+
+# Mais algumas informaçoes do questionario do estudante
+
+# 01: Estado civil
+# 02: Cor ou raça
+# 04: Escolaridade do pai
+# 05: Escolaridade da mae
+# 08: Renda familiar
+# 10: Situaçao de trabalho
+# 11: situaçao de bolsa
+# 14: intercambio
+# 15: cotas
+# 23: Horas de estudo / semana
+# 25: Motivo de escolha do curso
+# 26: Motivo da escolha da IES
+
+# agupando alunos por IES publica e privado
+# 
+
+enade["DESC_PUBLICA"] = ""   # inseri  nova coluna no dataframe com campos vazios
+enade.loc[enade.CO_CATEGAD.isin([118,120,121,10005,10006,10007,10008,10009,17634]),"DESC_PUBLICA"] = "Privado"   # inserindo dados privado de acordo com filtro na nova coluna
+enade.loc[enade.CO_CATEGAD.isin([93, 115, 116, 10001, 10002, 10003]),"DESC_PUBLICA"] = "Publica" # inserindo dados publica de acordo com filtro na nova coluna
+# verificando 
+enade.shape
+enade.describe()
+enade.DESC_PUBLICA
+# verificando valores
+enade.DESC_PUBLICA.value_counts()
+
+# valores relativos
+
+enade.DESC_PUBLICA.value_counts() / enade.shape[0]
+
+# transformar modalidades
+# vamos subsituir valores numericos por descriçao neste caso nçao sera necessario criar uma nova coluna
+enade["CO_MODALIDADE"] = enade.CO_MODALIDADE.replace({0 : "Ead", 1: "Presencial" })  # replace vai substituir 0 por stting e 1 por outra string
+enade.CO_MODALIDADE.value_counts()
+
+# transforma regiao 
+enade["CO_REGIAO_CURSO"] = enade.CO_REGIAO_CURSO.replace({1:"Norte", 2:"Nordeste", 3: "Sudeste", 4: "Sul", 5: "Centro-Oeste"})
+#verificandi 
+enade.CO_REGIAO_CURSO.value_counts()
+
+# transformando cor ou raça
+
+#frame[nome da coluna para inserir]
+enade["DESC_COR"] = enade.QE_I02.replace({"A":"BRANCA", "B": "PRETA", "C": "AMARELA", "D": "PARDA", "E": "INDIGENA","F": "SEM RESPOSTA"})  # pd.NA para o python entender como valores brancos e nulos
+enade.DESC_COR.value_counts()
+
+# algumas perguntas para responder
+
+#1 qual a nota geral media dos alunos da regiao nordeste
+
+enade.loc[enade.CO_REGIAO_CURSO == "Nordeste"].NT_GER.describe()
+# resposta 43.78
+
+#2 qual e a media da nota do componente especifico dos alunos do rio grande do sul de engenharia eletrica
+
+enade.loc[(enade.CO_UF_CURSO == 43) & (enade.CO_GRUPO == 5806)].NT_CE.describe()
+
+# resposta media igual a 34.79
+
+#3 qual e a media do componente de formaçao geral do sexo feminino, parda de minas gerais em cursos de engenharia de produçao presencial
+
+enade.loc[(enade.TP_SEXO == "F") & (enade.DESC_COR == "PARDA") & (enade.CO_UF_CURSO == 31) & (enade.CO_MODALIDADE == "Presencial") & (enade.CO_GRUPO == 6208)].NT_FG.describe()
+
+# resposta 40.19
+
+ 
