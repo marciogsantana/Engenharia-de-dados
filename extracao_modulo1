@@ -1,0 +1,45 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Nov 20 18:35:00 2020
+
+@author: Marcio Gomes de Sant
+
+"""
+
+# estracao de dados enade
+
+# importar pacotes
+
+# import pandas as pd // biblioteca de dataframe python
+# import numpy as np // biblioteca para cmputaçao cientifica
+# import ziplfile // biblioteca para trabalhar com arquivos zipados
+# import requests // biblioteca para trabalhar com requisiçoes
+# import os // bilioteca para trabalhar com sistema operacional
+# from io import BytesIO  // biblioteca para configurar imputs dos dados
+
+import pandas as pd
+import numpy as np
+import zipfile
+import requests
+import os
+from io import BytesIO
+
+# criar diretorio para armazenar conteudo do enade
+
+os.makedirs('./enade2019', exist_ok= True)  # exist_ok para verificar existencia do diretorio
+
+#define a url
+url = "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2019.zip"
+# faz o download do conteudo // content para separar o conteudo
+filebytes = BytesIO(requests.get(url).content)
+# extrai o conteudo do zipfile
+myzip = zipfile.ZipFile(filebytes)
+myzip.extractall('./enade2019')
+
+# verificando os dados baixados
+# parametros sep para separaracao de dados e decimal para casas decimais
+enade = pd.read_csv("./enade2019/microdados_enade_2019/2019/3.DADOS/microdados_enade_2019.txt",sep = ";", decimal = ",")
+#informaçoes do frame
+enade.info()
+# dicionario para visualizar colunas
+dict(enade.dtypes)
