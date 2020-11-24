@@ -1,0 +1,44 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Nov 23 15:24:45 2020
+
+@author: Marcio Gomes de Sant
+"""
+import json
+from tweepy import OAuthHandler, Stream, StreamListener
+from datetime import datetime  # para gravar data hora minutos e segundos
+
+# cadastrando chaves de acesso
+
+consumer_key = "jQgVtKSAy50k0k0xhMvXNE0jA"
+consumer_secret = "VgdwmYIz5qjxWMDJualE7l9JN5VG0c9BMfdLmgKeVQohXQeHRe"
+
+access_token = "1329426707439374337-dPy2vpskxAGJJ4R4oC3ueiLxZH2cc4"
+access_token_secret = "HEn86lqond9vb0EwGzcNQW7QitZXofWCOC51FHIo5FoFr"
+
+# funçao para gravar data hora minutos e segundos
+data_hoje = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+# definir um arquivo de saida para armazer  os tweets coletados
+out = open(f"collected_tweets_{data_hoje}.txt", "w")  # f antes do nome do arquivo {} antes do .txt para gravar as datas para nao subscrever
+
+# implementar uma classe para conexao com o twitter
+
+class MyListener(StreamListener):
+    
+    def on_data(self,data):
+       # print(data)  # apenas para testar se a funçao esta funcionando
+        itemString = json.dumps(data) #  itemString recebe informaçao tweets e convertido em forma json
+        out.write(itemString + "\n")  # grava no txt a quebra e faz quebra de linha
+        return True
+   
+    def on_error(self, status):  # funçao para capturar erros
+      print(status)
+        
+# implentar funçao Main
+if __name__ == "__main__":  # funçao Main para executar o que esta abaixo 
+    l = MyListener()
+    auth = OAuthHandler(consumer_key, consumer_secret)
+    auth.set_access_token(access_token, access_token_secret)
+    
+    stream = Stream(auth, l)
+    stream.filter(track =["Trump"] )  # define texto ou palavra que vamos buscar (monitorar no twitter)
