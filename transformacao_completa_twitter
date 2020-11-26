@@ -1,0 +1,232 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Nov 24 20:05:30 2020
+
+@author: Marcio Gomes de Sant
+"""
+
+# import json
+
+import json
+
+# abrir o arquivo de tweets para ler as linhas
+
+with open('collected_tweets_2020-11-23-22-47-48.txt', 'r') as file:
+    tweets = file.readlines()
+    
+    
+# lendo primeira linha do tweets
+    
+tweets[0]
+
+# convertendo arquivos estring para formato json da pimeira linha (parse) e exporta arquivo
+
+with open('tweets.json', 'w') as converte:
+    json.dump(json.loads( json.loads(tweets[0])), converte)
+    
+    
+# visualizando arquivo
+    
+json.loads(json.loads(tweets[0]))
+
+# visulaizando tipo de arquivo
+
+type(json.loads(json.loads(tweets[0])))
+
+# convertendo todos os tweets 
+
+parsed_tweets = [json.loads( json.loads(i) ) for i in tweets]  # tweets igual range do for
+
+# visualindo apos a conversao
+
+parsed_tweets[1]
+
+# verificando numero de tweets total coletados
+
+len(parsed_tweets)
+
+# acessando as chaves do json (dicionario)
+
+parsed_tweets[0].keys()
+
+primeiro = parsed_tweets[0]  # variavel primeiro apenas para ficar facial a digitaçao
+
+primeiro["created_at"]
+
+#  acessando chave do nivel root (raiz)
+
+primeiro["user"]  # primeira chave principal
+primeiro["user"]["id"] # acessando chave secundaria dentro da principal apenas coloca um putrpo []
+primeiro["user"]["location"] # acessando chave secundaria dentro da principal apenas coloca um putrpo []
+primeiro["user"]["screen_name"] # acessando chave secundaria dentro da principal apenas coloca um putrpo []
+primeiro["retweeted_status"]["created_at"]
+# pegando nome do primeiro usuario do tweett original
+primeiro["retweeted_status"]["entities"]
+
+# transformando os tweets em uma estrutura relacional analisavel
+
+# import pandas as pd
+import pandas as pd
+teste = pd.DataFrame(primeiro)
+teste
+# vendo colunas
+teste.columns
+
+# tentar importar direto para pandas nao funciona
+
+##### Maneira correta de impportar os dados para o pandas #####
+
+df_tratado = pd.DataFrame(primeiro).reset_index(drop = True).iloc[:1]
+
+# visualizar
+
+df_tratado.columns
+
+# removendo colunas
+
+df_tratado = df_tratado.drop(columns = ['quote_count', 'reply_count', 'retweet_count', 'favorite_count', 'favorited','retweeted', 'user', 'entities', 'retweeted_status'])
+
+# adicionando colunas de usuario no dadatframe tratado
+
+df_tratado['user_id'] = primeiro['user']['id']
+df_tratado['user_id_str'] = primeiro['user']['id_str']
+df_tratado['user_screen_name'] = primeiro['user']['screen_name']
+df_tratado['user_location'] = primeiro['user']['location']
+df_tratado['user_description'] = primeiro['user']['description']
+df_tratado['user_protected'] = primeiro['user']['protected']
+df_tratado['user_verified'] = primeiro['user']['verified']
+df_tratado['user_followers_count'] = primeiro['user']['followers_count']
+df_tratado['user_friends_count'] = primeiro['user']['friends_count']
+df_tratado['user_created_at'] = primeiro['user']['created_at']
+
+df_tratado
+
+# entidades
+
+primeiro['entities']
+
+# adicionando entities todas as mentions (mençoes)
+
+user_mentions= []
+
+for i in range(len(primeiro['entities']['user_mentions'])):
+    #print(i)
+    dicionariobase = primeiro['entities']['user_mentions'][i].copy() # copy para nao gerar ponteiro
+    # retirando coluna indices
+    dicionariobase.pop('indices', None)
+    df = pd.DataFrame(dicionariobase, index =[0])
+    df = df.rename(columns = {
+            'screen_name' : 'entities_screen_name',
+            'name' : 'entities_name',
+            'id' : 'entities_id',
+            'id_str' : 'entities_id_str'
+            
+    })
+    
+    user_mentions.append(df)  # append adicona no final da lista
+
+user_mentions
+
+# organizando
+
+dfs = []
+for i in user_mentions:
+    dfs.append(pd.concat([df_tratado.copy(), i], axis = 1))
+    
+
+pd.concat(dfs, ignore_index = True)
+
+#### funçao para tratamento de todo os tweets para um DataFrame pandas
+
+def tweet_para_df(tweet):
+    try:
+        df_tratado = pd.DataFrame(tweet).reset_index(drop = True).iloc[:1]
+        df_tratado = df_tratado.drop(columns = ['quote_count', 'reply_count', 'retweet_count', 'favorite_count', 'favorited','retweeted', 'user', 'entities', 'retweeted_status'])
+        df_tratado['user_id'] = tweet['user']['id']
+        df_tratado['user_id_str'] = tweet['user']['id_str']
+        df_tratado['user_screen_name'] = tweet['user']['screen_name']
+        df_tratado['user_location'] = tweet['user']['location']
+        df_tratado['user_description'] = tweet['user']['description']
+        df_tratado['user_protected'] = tweet['user']['protected']
+        df_tratado['user_verified'] = tweet['user']['verified']
+        df_tratado['user_followers_count'] = tweet['user']['followers_count']
+        df_tratado['user_friends_count'] = tweet['user']['friends_count']
+        df_tratado['user_created_at'] = tweet['user']['created_at']
+        user_mentions= []
+    
+        for i in range(len(tweet['entities']['user_mentions'])):
+        #print(i)
+            dicionariobase = tweet['entities']['user_mentions'][i].copy() # copy para nao gerar ponteiro
+            # retirando coluna indices
+            dicionariobase.pop('indices', None)
+            df = pd.DataFrame(dicionariobase, index =[0])
+            df = df.rename(columns = {
+                    'screen_name' : 'entities_screen_name',
+                    'name' : 'entities_name',
+                    'id' : 'entities_id',
+                    'id_str' : 'entities_id_str'
+                    
+            })
+            
+            user_mentions.append(df)
+        dfs = []    
+        for i in user_mentions:
+            dfs.append(pd.concat([df_tratado.copy(), i], axis = 1))
+            
+        
+        df_final = pd.concat(dfs, ignore_index = True)
+    except:
+        return None
+    return df_final
+
+
+# executando a funçao para testar informando um tweet
+    
+tweet_para_df(parsed_tweets[4])
+
+# executandio a funçao para todos os tweets
+
+parseados = [tweet_para_df(tweet) for tweet in parsed_tweets]
+
+# eliminando as posiçoes vazias da lista
+
+parseados = [i for i in parseados if i is not None]
+
+# verifcando tamanho
+
+len(parseados)
+
+# fazendo empilhamento final
+
+tratado_final = pd.concat(parseados, ignore_index = True)
+
+tratado_final
+
+
+## ingestao de dados do twitter no sqlserver
+
+# import pyodbcc
+# import slqalchemy
+
+import pyodbc
+import sqlalchemy
+
+# configurando a conexçao
+
+engine = sqlalchemy.create_engine('mssql+pyodbc://@localhost/twitter?Integrated Security=True;driver=ODBC+Driver+17+for+SQL+Server')
+
+# mssql+pyodbc  padrao
+# @localhost ip neste caso local
+# twitter nome do banco de dados
+# ?Integrated Security = True login do windows
+# driver = ODBC+driver+17+for+SQL+Server driver informaçoes do driver
+
+
+## comando para fazer a ingestao
+
+tratado_final.to_sql('tweests', con = engine, index = False, if_exists = 'append')
+
+# nome da tabela
+# con = engine  nome da engine de conexao
+# index = False para nao gerar indices 1,23 etc
+# if_exists = 'append' caso a tabela ja exista no banco será adicionado linhas aabaixo
