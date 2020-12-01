@@ -1,0 +1,129 @@
+# primeira Dag Airflow 
+
+from airflow import DAG
+from airflow.operators.python_operator import PythonOperator
+from airflow.operators.bash_operator import BashOperator
+from datetime import datetime, timedelta
+import pandas as pd
+
+# Argumentos default
+
+default_args = {
+
+    'owner': 'Marcio Santana',
+    'depends_on_past': False,
+    'start_date': datetime(2020, 11, 15, 15),
+    'email': ['marciogsantana@yahoo.com.br'],
+    'email_on_failure': False,
+    'email_on_retry': False,
+    "retries":1,
+    "retry_delay":timedelta(minutes=1) 
+
+
+}
+
+dag = DAG(
+
+    "treino-02",
+    description="Extrai dado do Titanic da internet e calcula idade media dos passageiros",
+    default_args = default_args,
+    schedule_interval=timedelta(minutes=2)
+
+)
+
+get_data = BashOperator(
+
+    task_id = 'get-data',
+    bash_command = 'curl https://raw.githubusercontente.com/A3Data/hermione/master/hermione/file_text/train.csv -o ~/train.csv',
+    dag = dag
+
+
+
+)
+
+def calculate_mean_age():
+    df = pd.read_csv('~/train.csv')
+    med = df.Age.mean()
+    return med
+
+def print_age(** context):
+    value = context['task_instance'].xcom_pull(task_ids= 'calcula-idade-media')
+    print(f"A idade media do titanic era {value} anos.")
+
+task_idade_media = PythonOperator(
+
+    task_id= 'calcula-idade-media',
+    python_callable = calculate_mean_age,
+    dag = dag
+
+)
+
+task_print_idade = PythonOperator(
+
+    task_id = 'mostra-idade',
+    python_callble = print_age,
+    dag = dag
+)
+
+get_data >> task_idade_media >> task_print_idade
+
+
+########### primeiro arquivo##################
+
+# primeira Dag Airflow 
+
+from airflow import DAG
+from airflow.operators.python_operator import PythonOperator
+from airflow.operators.bash_operator import BashOperator
+from datetime import datetime, timedelta
+
+# Argumentos default
+
+default_args = {
+
+    'owner': 'Marcio Santana',
+    'depends_on_past': False,
+    'start_date': datetime(2020, 11, 15, 15),
+    'email': ['marciogsantana@yahoo.com.br'],
+    'email_on_failure': False,
+    'email_on_retry': False,
+    "retries":1,
+    "retry_delay":timedelta(minutes=1) 
+
+
+}
+
+# vamos definir a Dag - fluxo
+
+dag = DAG(
+
+    "treino-01",
+    description="Basico de Bash Operators e python Operators",
+    default_args = default_args,
+    schedule_interval=timedelta(minutes=2)
+
+)
+
+# vamos começar a adicionar tarefas
+
+hello_bash = BashOperator(
+
+    task_id = "Hello_Bash",
+    bash_command= 'echo "Hello Airflow from basch"',
+    dag = dag
+)
+
+
+def say_hello():
+    print("Hello Airflow from python")  # funcao  
+
+
+hello_python = PythonOperator(
+
+    task_id = "Hello Python",
+    python_callable=say_hello,
+    dag=dag
+)
+
+hello_bash >> hello_python  # ordenando a sequencia
+
