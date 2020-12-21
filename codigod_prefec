@@ -1,11 +1,19 @@
 # https://cloud.prefect.io/marciogsantana-yahoo-cm-br-s-account/welcome/resources
 
 #1 -pip install prefect
-#2- prefect backend server
+#2- prefect backend cloud 
 #3- token = BqoyEZNV9o1IWaW5_esEMQ  (token gerado na pagina)
 #4 -prefect auth login -t BqoyEZNV9o1IWaW5_esEMQ  (token user)
 #5- prefect auth create-token -n my-runner-token -s RUNNER (Create a Runner Token) gerou este token YGMMBXn8NJr5QZF8EHCCjQ
 #6- set PREFECT__CLOUD__AGENT__AUTH_TOKEN=YGMMBXn8NJr5QZF8EHCCjQ   (set para windows e export para linux)
+
+# sequencia para autenticar e conectar no prefect cloud
+
+# 1 prefect backend cloud 
+# 2 prefect auth login -t(token pagina)
+# 3 prefect auth create-token -n my-runner-token -s RUNNER
+# 4 set PREFECT__CLOUD__AGENT__AUTH_TOKEN = (token gerado comando anterior)
+
 
 
 ################helo word.py###############################
